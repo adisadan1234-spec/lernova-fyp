@@ -1,0 +1,37 @@
+{
+  "name": "lernova-fyp",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Context-Aware Multilingual University Communication Assistant",
+  "engines": {
+    "node": ">=22.12.0"
+  },
+  "workspaces": [
+    "client",
+    "server"
+  ],
+  "scripts": {
+    "dev": "concurrently --kill-others-on-fail --names client,server --prefix-colors cyan,magenta \"npm run dev --workspace client\" \"npm run dev --workspace server\"",
+    "build": "npm run build --workspace server && npm run build --workspace client",
+    "typecheck": "npm run typecheck --workspace client && npm run typecheck --workspace server",
+    "lint": "eslint client server",
+    "test": "npm run test --workspace server",
+    "check": "npm run lint && npm run typecheck && npm run test && npm run build && npm run prisma:validate",
+    "prisma:generate": "prisma generate --config prisma7.config.ts",
+    "prisma:validate": "prisma validate --config prisma7.config.ts"
+  },
+  "devDependencies": {
+    "concurrently": "10.0.6",
+    "dotenv": "18.0.9",
+    "eslint": "10.14.0",
+    "prisma": "7.10.1",
+    "typescript": "6.0.3",
+    "typescript-eslint": "8.72.1"
+  },
+  "allowScripts": {
+    "prisma@7.10.1": true,
+    "@prisma/engines@7.10.1": true,
+    "esbuild@0.28.2": true
+  }
+}
