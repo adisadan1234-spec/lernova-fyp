@@ -1,13 +1,19 @@
 import { fireEvent, render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { describe, expect, it, vi } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 
+import { LANGUAGE_PREFERENCE_STORAGE_KEY } from "../language/languagePreferences";
 import { MAX_MESSAGE_LENGTH, MessageInputForm } from "./MessageInputForm";
 
 describe("MessageInputForm", () => {
+  beforeEach(() => {
+    window.localStorage.clear();
+  });
+
   it("starts with an accessible empty message field and character count", () => {
     render(<MessageInputForm />);
 
+    expect(screen.getByLabelText("Explanation language")).toHaveValue("en");
     expect(screen.getByLabelText("University message")).toHaveValue("");
     expect(screen.getByText("0 / 5,000")).toBeInTheDocument();
     expect(
@@ -66,10 +72,10 @@ describe("MessageInputForm", () => {
     await user.type(screen.getByLabelText("University message"), message);
     await user.click(screen.getByRole("button", { name: "Continue to analysis" }));
 
-    expect(onSubmit).toHaveBeenCalledWith(message);
+    expect(onSubmit).toHaveBeenCalledWith({ message, language: "en" });
     expect(
       screen.getByText(
-        "Message ready. The analysis connection will be added in a later task.",
+        "Message ready for explanation in English. The analysis connection will be added in a later task.",
       ),
     ).toBeInTheDocument();
     expect(screen.queryByRole("alert")).not.toBeInTheDocument();
@@ -101,9 +107,74 @@ describe("MessageInputForm", () => {
     expect(screen.getByText("0 / 5,000")).toBeInTheDocument();
     expect(
       screen.queryByText(
-        "Message ready. The analysis connection will be added in a later task.",
+        "Message ready for explanation in English. The analysis connection will be added in a later task.",
       ),
     ).not.toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Reset form" })).toBeDisabled();
+  });
+
+  it("offers the configured English and Urdu preferences", () => {
+    render(<MessageInputForm />);
+
+    expect(screen.getAllByRole("option")).toHaveLength(2);
+    expect(screen.getByRole("option", { name: "English" })).toBeInTheDocument();
+    expect(
+      screen.getByRole("option", { name: "Urdu — اردو" }),
+    ).toBeInTheDocument();
+  });
+
+  it("saves Urdu and applies right-to-left metadata", async () => {
+    const user = userEvent.setup();
+    render(<MessageInputForm />);
+    const languageField = screen.getByLabelText("Explanation language");
+
+    await user.selectOptions(languageField, "ur");
+
+    expect(languageField).toHaveValue("ur");
+    expect(languageField).toHaveAttribute("lang", "ur");
+    expect(languageField).toHaveAttribute("dir", "rtl");
+    expect(screen.getByText("اردو", { selector: "span" })).toHaveAttribute(
+      "dir",
+      "rtl",
+    );
+    expect(window.localStorage.getItem(LANGUAGE_PREFERENCE_STORAGE_KEY)).toBe(
+      "ur",
+    );
+  });
+
+  it("restores a supported saved language and ignores an unsupported value", () => {
+    window.localStorage.setItem(LANGUAGE_PREFERENCE_STORAGE_KEY, "ur");
+    const { unmount } = render(<MessageInputForm />);
+
+    expect(screen.getByLabelText("Explanation language")).toHaveValue("ur");
+
+    unmount();
+    window.localStorage.setItem(LANGUAGE_PREFERENCE_STORAGE_KEY, "unsupported");
+    render(<MessageInputForm />);
+
+    expect(screen.getByLabelText("Explanation language")).toHaveValue("en");
+  });
+
+  it("submits the selected language and preserves it when the form resets", async () => {
+    const user = userEvent.setup();
+    const onSubmit = vi.fn();
+    render(<MessageInputForm onSubmit={onSubmit} />);
+
+    await user.selectOptions(screen.getByLabelText("Explanation language"), "ur");
+    await user.type(
+      screen.getByLabelText("University message"),
+      "Submit the assessment before Friday.",
+    );
+    await user.click(screen.getByRole("button", { name: "Continue to analysis" }));
+
+    expect(onSubmit).toHaveBeenCalledWith({
+      message: "Submit the assessment before Friday.",
+      language: "ur",
+    });
+
+    await user.click(screen.getByRole("button", { name: "Reset form" }));
+
+    expect(screen.getByLabelText("Explanation language")).toHaveValue("ur");
+    expect(screen.getByLabelText("University message")).toHaveValue("");
   });
 });

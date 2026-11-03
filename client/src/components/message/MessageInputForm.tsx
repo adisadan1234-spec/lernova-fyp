@@ -1,10 +1,21 @@
 import { useRef, useState } from "react";
 import type { ChangeEvent, FormEvent } from "react";
 
+import { LanguagePreferenceField } from "../language/LanguagePreferenceField";
+import {
+  getSupportedLanguage,
+  readLanguagePreference,
+  saveLanguagePreference,
+} from "../language/languagePreferences";
+import type { SupportedLanguageCode } from "../language/languagePreferences";
+
 export const MAX_MESSAGE_LENGTH = 5_000;
 
 type MessageInputFormProps = {
-  onSubmit?: (message: string) => void;
+  onSubmit?: (submission: {
+    message: string;
+    language: SupportedLanguageCode;
+  }) => void;
 };
 
 function getMessageError(message: string) {
@@ -22,6 +33,7 @@ function getMessageError(message: string) {
 
 export function MessageInputForm({ onSubmit }: MessageInputFormProps) {
   const [message, setMessage] = useState("");
+  const [language, setLanguage] = useState(readLanguagePreference);
   const [error, setError] = useState<string | null>(null);
   const [isReady, setIsReady] = useState(false);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
@@ -48,6 +60,12 @@ export function MessageInputForm({ onSubmit }: MessageInputFormProps) {
     textareaRef.current?.focus();
   }
 
+  function updateLanguage(nextLanguage: SupportedLanguageCode) {
+    setLanguage(nextLanguage);
+    setIsReady(false);
+    saveLanguagePreference(nextLanguage);
+  }
+
   function resetForm(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setMessage("");
@@ -68,8 +86,10 @@ export function MessageInputForm({ onSubmit }: MessageInputFormProps) {
 
     setError(null);
     setIsReady(true);
-    onSubmit?.(message);
+    onSubmit?.({ message, language });
   }
+
+  const selectedLanguage = getSupportedLanguage(language);
 
   const describedBy = [
     "message-help",
@@ -81,7 +101,9 @@ export function MessageInputForm({ onSubmit }: MessageInputFormProps) {
 
   return (
     <form className="mt-6" noValidate onReset={resetForm} onSubmit={submitMessage}>
-      <div className="flex items-end justify-between gap-3">
+      <LanguagePreferenceField value={language} onChange={updateLanguage} />
+
+      <div className="mt-5 flex items-end justify-between gap-3">
         <div>
           <label htmlFor="university-message" className="text-sm font-bold text-ink-950">
             University message
@@ -158,7 +180,8 @@ export function MessageInputForm({ onSubmit }: MessageInputFormProps) {
           role="status"
           className="mt-3 rounded-xl bg-mint-50 px-3.5 py-3 text-sm font-semibold leading-5 text-mint-700"
         >
-          Message ready. The analysis connection will be added in a later task.
+          Message ready for explanation in {selectedLanguage.name}. The analysis
+          connection will be added in a later task.
         </p>
       ) : null}
 
