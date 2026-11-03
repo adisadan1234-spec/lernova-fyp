@@ -1,4 +1,5 @@
 import { FeaturePlaceholder } from "../components/ui/FeaturePlaceholder";
+import { MessageInputForm } from "../components/message/MessageInputForm";
 import { Panel } from "../components/ui/Panel";
 
 const resultSections = [
@@ -78,29 +79,11 @@ export function HomePage() {
                   Add your message
                 </h2>
               </div>
-              <span className="rounded-full bg-paper-100 px-3 py-1.5 text-xs font-semibold text-ink-600">
-                Input coming next
+              <span className="rounded-full bg-mint-100 px-3 py-1.5 text-xs font-semibold text-mint-700">
+                Ready for input
               </span>
             </div>
-
-            <div className="mt-6 rounded-2xl border border-ink-950/15 bg-paper-50 p-4">
-              <p className="m-0 min-h-32 text-sm leading-6 text-ink-600">
-                Paste an email, announcement, or assessment instruction here…
-              </p>
-              <div className="mt-4 flex items-center justify-between border-t border-ink-950/10 pt-3 text-xs font-semibold text-ink-600">
-                <span>University communication</span>
-                <span>0 / 5,000</span>
-              </div>
-            </div>
-
-            <div className="mt-5 flex flex-wrap gap-3">
-              <span className="rounded-xl bg-ink-950 px-5 py-3 text-sm font-bold text-white opacity-45">
-                Analyse message
-              </span>
-              <span className="rounded-xl border border-ink-950/15 px-5 py-3 text-sm font-bold text-ink-600 opacity-60">
-                Clear
-              </span>
-            </div>
+            <MessageInputForm />
           </Panel>
 
           <Panel className="overflow-hidden">
