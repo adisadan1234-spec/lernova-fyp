@@ -1,14 +1,72 @@
-import { FeaturePlaceholder } from "../components/ui/FeaturePlaceholder";
+import { useEffect, useRef, useState } from "react";
+
+import {
+  AnalysisRequestError,
+  requestAnalysis,
+} from "../api/analysis";
+import {
+  AnalysisResults,
+  type AnalysisWorkflowState,
+} from "../components/analysis/AnalysisResults";
 import { MessageInputForm } from "../components/message/MessageInputForm";
 import { Panel } from "../components/ui/Panel";
 
-const resultSections = [
-  ["01", "Clear meaning", "A plain-language explanation of the whole message."],
-  ["02", "Key terms", "Context for unfamiliar academic words and local labels."],
-  ["03", "Your next step", "Required actions, deadlines, and details to confirm."],
-] as const;
-
 export function HomePage() {
+  const [analysisState, setAnalysisState] = useState<AnalysisWorkflowState>({
+    status: "idle",
+  });
+  const requestControllerRef = useRef<AbortController | null>(null);
+
+  useEffect(() => {
+    return () => requestControllerRef.current?.abort();
+  }, []);
+
+  async function submitForAnalysis({
+    message,
+    language,
+  }: {
+    message: string;
+    language: "en" | "ur";
+  }) {
+    requestControllerRef.current?.abort();
+    const requestController = new AbortController();
+    requestControllerRef.current = requestController;
+    setAnalysisState({ status: "loading" });
+
+    try {
+      const response = await requestAnalysis(
+        { message, targetLanguage: language },
+        requestController.signal,
+      );
+
+      if (!requestController.signal.aborted) {
+        setAnalysisState({ status: "success", response });
+      }
+    } catch (error) {
+      if (!requestController.signal.aborted) {
+        setAnalysisState({
+          status: "error",
+          message:
+            error instanceof AnalysisRequestError
+              ? error.message
+              : "The analysis request could not be completed. Please try again.",
+        });
+      }
+    } finally {
+      if (requestControllerRef.current === requestController) {
+        requestControllerRef.current = null;
+      }
+    }
+  }
+
+  function clearAnalysis() {
+    requestControllerRef.current?.abort();
+    requestControllerRef.current = null;
+    setAnalysisState({ status: "idle" });
+  }
+
+  const formStatus = getFormStatus(analysisState.status);
+
   return (
     <>
       <section className="relative overflow-hidden border-b border-ink-950/10 bg-mint-50">
@@ -64,7 +122,8 @@ export function HomePage() {
             </h2>
           </div>
           <p className="m-0 max-w-md text-sm leading-6 text-ink-600">
-            The input and analysis workflow is being added incrementally.
+            This development stage connects the form to a clearly labelled API
+            fixture. It does not translate or interpret the message yet.
           </p>
         </div>
 
@@ -80,10 +139,15 @@ export function HomePage() {
                 </h2>
               </div>
               <span className="rounded-full bg-mint-100 px-3 py-1.5 text-xs font-semibold text-mint-700">
-                Ready for input
+                {formStatus}
               </span>
             </div>
-            <MessageInputForm />
+            <MessageInputForm
+              isSubmitting={analysisState.status === "loading"}
+              onDraftChange={clearAnalysis}
+              onReset={clearAnalysis}
+              onSubmit={submitForAnalysis}
+            />
           </Panel>
 
           <Panel className="overflow-hidden">
@@ -95,19 +159,23 @@ export function HomePage() {
                 Your explanation
               </h2>
             </div>
-            <div className="grid gap-3 p-5 sm:p-7">
-              {resultSections.map(([eyebrow, title, description]) => (
-                <FeaturePlaceholder
-                  key={eyebrow}
-                  eyebrow={eyebrow}
-                  title={title}
-                  description={description}
-                />
-              ))}
-            </div>
+            <AnalysisResults state={analysisState} />
           </Panel>
         </div>
       </section>
     </>
   );
+}
+
+function getFormStatus(status: AnalysisWorkflowState["status"]) {
+  switch (status) {
+    case "loading":
+      return "Request in progress";
+    case "success":
+      return "Fixture returned";
+    case "error":
+      return "Ready to retry";
+    default:
+      return "Ready for input";
+  }
 }

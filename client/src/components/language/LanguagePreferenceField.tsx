@@ -11,11 +11,13 @@ import type { SupportedLanguageCode } from "./languagePreferences";
 type LanguagePreferenceFieldProps = {
   value: SupportedLanguageCode;
   onChange: (language: SupportedLanguageCode) => void;
+  disabled?: boolean;
 };
 
 export function LanguagePreferenceField({
   value,
   onChange,
+  disabled = false,
 }: LanguagePreferenceFieldProps) {
   const fieldId = useId();
   const selectId = `${fieldId}-select`;
@@ -38,8 +40,8 @@ export function LanguagePreferenceField({
             Explanation language
           </label>
           <p id={helpId} className="mt-1 text-xs leading-5 text-ink-600">
-            Choose the language for future translation and contextual guidance.
-            This preference is saved in this browser.
+            Choose the language for translation and contextual guidance. This
+            preference is saved in this browser.
           </p>
         </div>
 
@@ -48,11 +50,12 @@ export function LanguagePreferenceField({
             id={selectId}
             name="language"
             value={value}
+            disabled={disabled}
             lang={selectedLanguage.code}
             dir={selectedLanguage.direction}
             aria-describedby={helpId}
             onChange={updateLanguage}
-            className="min-h-11 w-full appearance-none rounded-xl border border-ink-950/15 bg-white py-2.5 pl-3 pr-10 text-sm font-bold text-ink-950 shadow-sm"
+            className="min-h-11 w-full appearance-none rounded-xl border border-ink-950/15 bg-white py-2.5 pl-3 pr-10 text-sm font-bold text-ink-950 shadow-sm disabled:cursor-wait disabled:opacity-60"
           >
             {supportedLanguages.map((language) => (
               <option

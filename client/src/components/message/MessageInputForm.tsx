@@ -3,7 +3,6 @@ import type { ChangeEvent, FormEvent } from "react";
 
 import { LanguagePreferenceField } from "../language/LanguagePreferenceField";
 import {
-  getSupportedLanguage,
   readLanguagePreference,
   saveLanguagePreference,
 } from "../language/languagePreferences";
@@ -16,6 +15,9 @@ type MessageInputFormProps = {
     message: string;
     language: SupportedLanguageCode;
   }) => void;
+  onDraftChange?: () => void;
+  onReset?: () => void;
+  isSubmitting?: boolean;
 };
 
 function getMessageError(message: string) {
@@ -31,20 +33,24 @@ function getMessageError(message: string) {
   return null;
 }
 
-export function MessageInputForm({ onSubmit }: MessageInputFormProps) {
+export function MessageInputForm({
+  onSubmit,
+  onDraftChange,
+  onReset,
+  isSubmitting = false,
+}: MessageInputFormProps) {
   const [message, setMessage] = useState("");
   const [language, setLanguage] = useState(readLanguagePreference);
   const [error, setError] = useState<string | null>(null);
-  const [isReady, setIsReady] = useState(false);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   const isOverLimit = message.length > MAX_MESSAGE_LENGTH;
-  const hasFormState = message.length > 0 || error !== null || isReady;
+  const hasFormState = message.length > 0 || error !== null;
 
   function updateMessage(event: ChangeEvent<HTMLTextAreaElement>) {
     const nextMessage = event.target.value;
     setMessage(nextMessage);
-    setIsReady(false);
+    onDraftChange?.();
 
     if (nextMessage.length > MAX_MESSAGE_LENGTH) {
       setError(getMessageError(nextMessage));
@@ -56,13 +62,13 @@ export function MessageInputForm({ onSubmit }: MessageInputFormProps) {
   function clearText() {
     setMessage("");
     setError(null);
-    setIsReady(false);
+    onDraftChange?.();
     textareaRef.current?.focus();
   }
 
   function updateLanguage(nextLanguage: SupportedLanguageCode) {
     setLanguage(nextLanguage);
-    setIsReady(false);
+    onDraftChange?.();
     saveLanguagePreference(nextLanguage);
   }
 
@@ -70,7 +76,7 @@ export function MessageInputForm({ onSubmit }: MessageInputFormProps) {
     event.preventDefault();
     setMessage("");
     setError(null);
-    setIsReady(false);
+    onReset?.();
   }
 
   function submitMessage(event: FormEvent<HTMLFormElement>) {
@@ -79,17 +85,13 @@ export function MessageInputForm({ onSubmit }: MessageInputFormProps) {
 
     if (validationError) {
       setError(validationError);
-      setIsReady(false);
       textareaRef.current?.focus();
       return;
     }
 
     setError(null);
-    setIsReady(true);
     onSubmit?.({ message, language });
   }
-
-  const selectedLanguage = getSupportedLanguage(language);
 
   const describedBy = [
     "message-help",
@@ -100,8 +102,18 @@ export function MessageInputForm({ onSubmit }: MessageInputFormProps) {
     .join(" ");
 
   return (
-    <form className="mt-6" noValidate onReset={resetForm} onSubmit={submitMessage}>
-      <LanguagePreferenceField value={language} onChange={updateLanguage} />
+    <form
+      className="mt-6"
+      noValidate
+      aria-busy={isSubmitting}
+      onReset={resetForm}
+      onSubmit={submitMessage}
+    >
+      <LanguagePreferenceField
+        value={language}
+        disabled={isSubmitting}
+        onChange={updateLanguage}
+      />
 
       <div className="mt-5 flex items-end justify-between gap-3">
         <div>
@@ -114,7 +126,7 @@ export function MessageInputForm({ onSubmit }: MessageInputFormProps) {
         </div>
         <button
           type="button"
-          disabled={message.length === 0}
+          disabled={message.length === 0 || isSubmitting}
           onClick={clearText}
           className="shrink-0 rounded-lg px-2.5 py-1.5 text-xs font-bold text-mint-700 transition-colors hover:bg-mint-100 disabled:cursor-not-allowed disabled:opacity-40"
         >
@@ -135,11 +147,12 @@ export function MessageInputForm({ onSubmit }: MessageInputFormProps) {
           name="message"
           rows={8}
           value={message}
+          disabled={isSubmitting}
           aria-describedby={describedBy}
           aria-invalid={error ? "true" : "false"}
           onChange={updateMessage}
           placeholder="For example: Submit your formative assessment before your next Project Huddle."
-          className="block min-h-48 w-full resize-y border-0 bg-transparent px-4 py-4 text-sm leading-6 text-ink-950 outline-none placeholder:text-ink-600/65"
+          className="block min-h-48 w-full resize-y border-0 bg-transparent px-4 py-4 text-sm leading-6 text-ink-950 outline-none placeholder:text-ink-600/65 disabled:cursor-wait disabled:opacity-60"
         />
 
         <div className="flex flex-wrap items-center justify-between gap-2 border-t border-ink-950/10 bg-white/65 px-4 py-3 text-xs">
@@ -175,38 +188,41 @@ export function MessageInputForm({ onSubmit }: MessageInputFormProps) {
         </p>
       ) : null}
 
-      {isReady ? (
-        <p
-          role="status"
-          className="mt-3 rounded-xl bg-mint-50 px-3.5 py-3 text-sm font-semibold leading-5 text-mint-700"
-        >
-          Message ready for explanation in {selectedLanguage.name}. The analysis
-          connection will be added in a later task.
-        </p>
-      ) : null}
-
       <div className="mt-5 flex flex-col gap-3 sm:flex-row">
         <button
           type="submit"
-          className="inline-flex min-h-12 items-center justify-center gap-2 rounded-xl bg-ink-950 px-5 py-3 text-sm font-bold text-white shadow-sm transition-colors hover:bg-mint-700"
+          disabled={isSubmitting}
+          className="inline-flex min-h-12 items-center justify-center gap-2 rounded-xl bg-ink-950 px-5 py-3 text-sm font-bold text-white shadow-sm transition-colors hover:bg-mint-700 disabled:cursor-wait disabled:opacity-70"
         >
-          Continue to analysis
-          <svg
-            aria-hidden="true"
-            viewBox="0 0 24 24"
-            className="size-4"
-            fill="none"
-            stroke="currentColor"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            strokeWidth="2"
-          >
-            <path d="M5 12h14M13 6l6 6-6 6" />
-          </svg>
+          {isSubmitting ? (
+            <>
+              <span
+                aria-hidden="true"
+                className="size-4 animate-spin rounded-full border-2 border-white/40 border-t-white"
+              />
+              Requesting analysis…
+            </>
+          ) : (
+            <>
+              Continue to analysis
+              <svg
+                aria-hidden="true"
+                viewBox="0 0 24 24"
+                className="size-4"
+                fill="none"
+                stroke="currentColor"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth="2"
+              >
+                <path d="M5 12h14M13 6l6 6-6 6" />
+              </svg>
+            </>
+          )}
         </button>
         <button
           type="reset"
-          disabled={!hasFormState}
+          disabled={!hasFormState || isSubmitting}
           className="min-h-12 rounded-xl border border-ink-950/15 px-5 py-3 text-sm font-bold text-ink-800 transition-colors hover:bg-paper-100 disabled:cursor-not-allowed disabled:opacity-40"
         >
           Reset form

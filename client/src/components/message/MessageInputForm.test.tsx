@@ -63,7 +63,7 @@ describe("MessageInputForm", () => {
     expect(messageField).toHaveAttribute("aria-invalid", "true");
   });
 
-  it("submits a valid message unchanged and shows an honest ready state", async () => {
+  it("submits a valid message unchanged", async () => {
     const user = userEvent.setup();
     const onSubmit = vi.fn();
     render(<MessageInputForm onSubmit={onSubmit} />);
@@ -73,11 +73,6 @@ describe("MessageInputForm", () => {
     await user.click(screen.getByRole("button", { name: "Continue to analysis" }));
 
     expect(onSubmit).toHaveBeenCalledWith({ message, language: "en" });
-    expect(
-      screen.getByText(
-        "Message ready for explanation in English. The analysis connection will be added in a later task.",
-      ),
-    ).toBeInTheDocument();
     expect(screen.queryByRole("alert")).not.toBeInTheDocument();
   });
 
@@ -96,7 +91,8 @@ describe("MessageInputForm", () => {
 
   it("resets the message and submission state", async () => {
     const user = userEvent.setup();
-    render(<MessageInputForm />);
+    const onReset = vi.fn();
+    render(<MessageInputForm onReset={onReset} />);
     const messageField = screen.getByLabelText("University message");
 
     await user.type(messageField, "Complete the task before Friday.");
@@ -105,11 +101,18 @@ describe("MessageInputForm", () => {
 
     expect(messageField).toHaveValue("");
     expect(screen.getByText("0 / 5,000")).toBeInTheDocument();
+    expect(onReset).toHaveBeenCalledOnce();
+    expect(screen.getByRole("button", { name: "Reset form" })).toBeDisabled();
+  });
+
+  it("prevents form changes while an analysis request is pending", () => {
+    render(<MessageInputForm isSubmitting />);
+
+    expect(screen.getByLabelText("Explanation language")).toBeDisabled();
+    expect(screen.getByLabelText("University message")).toBeDisabled();
     expect(
-      screen.queryByText(
-        "Message ready for explanation in English. The analysis connection will be added in a later task.",
-      ),
-    ).not.toBeInTheDocument();
+      screen.getByRole("button", { name: "Requesting analysis…" }),
+    ).toBeDisabled();
     expect(screen.getByRole("button", { name: "Reset form" })).toBeDisabled();
   });
 
