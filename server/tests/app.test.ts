@@ -1,11 +1,16 @@
 import request from "supertest";
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 
 import {
   analysisResponseSchema,
   MAX_MESSAGE_LENGTH,
 } from "../src/analysis/analysis.schemas.js";
 import { createApp } from "../src/app.js";
+import {
+  InvalidProviderResponseError,
+  ProviderTimeoutError,
+  ProviderUnavailableError,
+} from "../src/language-processing/language-processing.errors.js";
 
 describe("Lernova API foundation", () => {
   it("reports a healthy API", async () => {
@@ -145,6 +150,46 @@ describe("POST /api/analyses", () => {
       error: {
         code: "PAYLOAD_TOO_LARGE",
         message: "The request body is too large.",
+      },
+    });
+  });
+
+  it.each([
+    {
+      error: new ProviderUnavailableError(),
+      status: 503,
+      code: "ANALYSIS_UNAVAILABLE",
+      message: "The analysis service is temporarily unavailable. Please try again.",
+    },
+    {
+      error: new ProviderTimeoutError(),
+      status: 504,
+      code: "ANALYSIS_TIMEOUT",
+      message: "The analysis took too long. Please try again.",
+    },
+    {
+      error: new InvalidProviderResponseError(),
+      status: 502,
+      code: "INVALID_ANALYSIS_RESPONSE",
+      message: "The analysis service returned an invalid response. Please try again.",
+    },
+  ])("maps $code failures to a recoverable API error", async (failure) => {
+    const languageProcessor = {
+      process: vi.fn().mockRejectedValue(failure.error),
+    };
+
+    const response = await request(createApp({ languageProcessor }))
+      .post("/api/analyses")
+      .send({
+        message: "Attend the project meeting.",
+        targetLanguage: "en",
+      });
+
+    expect(response.status).toBe(failure.status);
+    expect(response.body).toEqual({
+      error: {
+        code: failure.code,
+        message: failure.message,
       },
     });
   });

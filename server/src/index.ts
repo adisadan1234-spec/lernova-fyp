@@ -2,9 +2,18 @@ import "dotenv/config";
 
 import { createApp } from "./app.js";
 import { readEnvironment } from "./config.js";
+import { createLanguageProcessingService } from "./language-processing/language-processing.service.js";
 
 const environment = readEnvironment(process.env);
-const app = createApp({ clientOrigin: environment.CLIENT_ORIGIN });
+const languageProcessor = createLanguageProcessingService({
+  provider: environment.LANGUAGE_PROCESSING_PROVIDER,
+  apiKey: environment.LANGUAGE_PROCESSING_API_KEY,
+  timeoutMs: environment.LANGUAGE_PROCESSING_TIMEOUT_MS,
+});
+const app = createApp({
+  clientOrigin: environment.CLIENT_ORIGIN,
+  languageProcessor,
+});
 
 const server = app.listen(environment.PORT, () => {
   console.log(`Lernova API listening on http://localhost:${environment.PORT}`);

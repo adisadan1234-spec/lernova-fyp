@@ -1,14 +1,22 @@
 import cors from "cors";
 import express, { type ErrorRequestHandler } from "express";
 
-import { analysisRouter } from "./analysis/analysis.router.js";
+import { createAnalysisRouter } from "./analysis/analysis.router.js";
+import {
+  createLanguageProcessingService,
+  type LanguageProcessor,
+} from "./language-processing/language-processing.service.js";
 
 interface AppOptions {
   clientOrigin?: string;
+  languageProcessor?: LanguageProcessor;
 }
 
 export function createApp(options: AppOptions = {}) {
   const app = express();
+  const languageProcessor =
+    options.languageProcessor ??
+    createLanguageProcessingService({ provider: "mock" });
 
   app.disable("x-powered-by");
   app.use(
@@ -28,7 +36,7 @@ export function createApp(options: AppOptions = {}) {
     });
   });
 
-  app.use("/api/analyses", analysisRouter);
+  app.use("/api/analyses", createAnalysisRouter(languageProcessor));
 
   app.use((_request, response) => {
     response.status(404).json({

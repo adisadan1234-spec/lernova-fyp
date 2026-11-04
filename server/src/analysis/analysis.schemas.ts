@@ -84,3 +84,4 @@ export const analysisResponseSchema = z.strictObject({
 
 export type AnalysisRequest = z.infer<typeof analysisRequestSchema>;
 export type AnalysisResponse = z.infer<typeof analysisResponseSchema>;
+export type SupportedLanguage = z.infer<typeof supportedLanguageSchema>;
