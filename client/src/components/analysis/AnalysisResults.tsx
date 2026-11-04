@@ -33,10 +33,10 @@ export function AnalysisResults({ state }: AnalysisResultsProps) {
             className="mx-auto block size-10 animate-spin rounded-full border-4 border-mint-100 border-t-mint-600"
           />
           <h3 className="mt-5 text-lg font-bold tracking-[-0.025em] text-ink-950">
-            Requesting a development fixture
+            Translating your message
           </h3>
           <p className="mt-2 text-sm leading-6 text-ink-600">
-            Lernova is sending the message to the local analysis API.
+            Lernova is waiting for the configured translation service.
           </p>
         </div>
       </div>
@@ -66,7 +66,7 @@ export function AnalysisResults({ state }: AnalysisResultsProps) {
   }
 
   if (state.status === "success") {
-    return <FixtureAnalysis response={state.response} />;
+    return <AnalysisOutput response={state.response} />;
   }
 
   return (
@@ -83,9 +83,11 @@ export function AnalysisResults({ state }: AnalysisResultsProps) {
   );
 }
 
-function FixtureAnalysis({ response }: { response: AnalysisResponse }) {
+function AnalysisOutput({ response }: { response: AnalysisResponse }) {
   const { data, meta } = response;
   const selectedLanguage = getSupportedLanguage(data.targetLanguage);
+  const translationReady =
+    meta.mode === "live" && data.translation.status === "generated";
   const structuredCounts = [
     ["Academic terms", data.academicTerms.length],
     ["Activity explanations", data.academicImportance.length],
@@ -100,14 +102,24 @@ function FixtureAnalysis({ response }: { response: AnalysisResponse }) {
         role="status"
         aria-label="Analysis result status"
         aria-live="polite"
-        className="rounded-2xl border border-coral-500/30 bg-coral-100/70 p-4"
+        className={`rounded-2xl border p-4 ${
+          translationReady
+            ? "border-mint-500/30 bg-mint-50"
+            : "border-coral-500/30 bg-coral-100/70"
+        }`}
       >
         <div className="flex flex-wrap items-center gap-2">
-          <span className="rounded-full bg-coral-500 px-2.5 py-1 text-[0.68rem] font-bold uppercase tracking-[0.12em] text-white">
-            Development fixture
+          <span
+            className={`rounded-full px-2.5 py-1 text-[0.68rem] font-bold uppercase tracking-[0.12em] text-white ${
+              translationReady ? "bg-mint-700" : "bg-coral-500"
+            }`}
+          >
+            {translationReady ? "Translation ready" : "Development fixture"}
           </span>
           <span className="text-xs font-bold text-ink-800">
-            No real analysis performed
+            {translationReady
+              ? "Contextual analysis remains in development"
+              : "No real analysis performed"}
           </span>
         </div>
         <p id="analysis-result-title" className="mt-3 text-sm font-semibold leading-6 text-ink-950">
@@ -129,23 +141,27 @@ function FixtureAnalysis({ response }: { response: AnalysisResponse }) {
         </section>
 
         <div className="grid gap-4 sm:grid-cols-2">
-          <FixtureContent
+          <ResultContent
             title="Translation"
             text={data.translation.text}
             status={data.translation.status}
+            lang={selectedLanguage.code}
+            direction={selectedLanguage.direction}
           />
-          <FixtureContent
+          <ResultContent
             title="Clear meaning"
             text={data.plainLanguageMeaning.text}
             status={data.plainLanguageMeaning.status}
+            lang="en"
+            direction="ltr"
           />
         </div>
 
         <section className="rounded-2xl border border-ink-950/10 p-4">
           <h3 className="m-0 text-sm font-bold text-ink-950">Structured findings</h3>
           <p className="mt-1 text-xs leading-5 text-ink-600">
-            These collections are present in the API contract but intentionally empty in
-            Task 8.
+            These collections are present in the API contract but remain scheduled for
+            later development tasks.
           </p>
           <dl className="mt-3 grid gap-2 sm:grid-cols-2">
             {structuredCounts.map(([label, count]) => (
@@ -182,24 +198,42 @@ function FixtureAnalysis({ response }: { response: AnalysisResponse }) {
   );
 }
 
-function FixtureContent({
+function ResultContent({
   title,
   text,
   status,
+  lang,
+  direction,
 }: {
   title: string;
   text: string;
   status: "fixture" | "generated";
+  lang: string;
+  direction: "ltr" | "rtl";
 }) {
   return (
-    <section className="rounded-2xl border border-dashed border-ink-950/20 bg-paper-100/80 p-4">
+    <section
+      className={`rounded-2xl border p-4 ${
+        status === "generated"
+          ? "border-mint-500/30 bg-white"
+          : "border-dashed border-ink-950/20 bg-paper-100/80"
+      }`}
+    >
       <div className="flex items-center justify-between gap-3">
         <h3 className="m-0 text-sm font-bold text-ink-950">{title}</h3>
         <span className="text-[0.68rem] font-bold uppercase tracking-[0.12em] text-coral-500">
           {status}
         </span>
       </div>
-      <p className="mt-2 text-sm leading-6 text-ink-600">{text}</p>
+      <p
+        lang={lang}
+        dir={direction}
+        className={`mt-2 whitespace-pre-wrap text-sm leading-6 ${
+          status === "generated" ? "text-ink-800" : "text-ink-600"
+        }`}
+      >
+        {text}
+      </p>
     </section>
   );
 }

@@ -1,15 +1,10 @@
 import { z } from "zod";
 
-const optionalSecretSchema = z.preprocess(
-  (value) =>
-    typeof value === "string" && value.trim().length === 0 ? undefined : value,
-  z.string().trim().min(1).optional(),
-);
-
 const environmentSchema = z.object({
   CLIENT_ORIGIN: z.url().default("http://localhost:5173"),
-  LANGUAGE_PROCESSING_API_KEY: optionalSecretSchema,
-  LANGUAGE_PROCESSING_PROVIDER: z.enum(["mock"]).default("mock"),
+  LANGUAGE_PROCESSING_PROVIDER: z
+    .enum(["mock", "mymemory"])
+    .default("mock"),
   LANGUAGE_PROCESSING_TIMEOUT_MS: z.coerce
     .number()
     .int()

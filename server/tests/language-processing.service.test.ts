@@ -49,6 +49,26 @@ describe("LanguageProcessingService", () => {
     });
   });
 
+  it("validates generated text without changing its whitespace", async () => {
+    const outputWithWhitespace = {
+      ...validProviderOutput,
+      translation: {
+        status: "generated",
+        text: "  Attend the seminar tomorrow.\n",
+      },
+    };
+    const service = new LanguageProcessingService(
+      createProvider(vi.fn().mockResolvedValue(outputWithWhitespace)),
+      1_000,
+    );
+
+    await expect(service.process(request)).resolves.toMatchObject({
+      translation: {
+        text: "  Attend the seminar tomorrow.\n",
+      },
+    });
+  });
+
   it("rejects malformed provider output before it reaches the API", async () => {
     const provider = createProvider(
       vi.fn().mockResolvedValue({

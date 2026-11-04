@@ -12,6 +12,7 @@ import {
   type LanguageProcessingOutput,
 } from "./language-processing.schemas.js";
 import { MockLanguageProcessingProvider } from "./providers/mock-language-processing.provider.js";
+import { MyMemoryTranslationProvider } from "./providers/mymemory-translation.provider.js";
 
 export const DEFAULT_LANGUAGE_PROCESSING_TIMEOUT_MS = 15_000;
 
@@ -46,7 +47,10 @@ export class LanguageProcessingService implements LanguageProcessor {
         timeout,
       ]);
     } catch (error) {
-      if (error instanceof ProviderTimeoutError) {
+      if (
+        error instanceof ProviderTimeoutError ||
+        error instanceof InvalidProviderResponseError
+      ) {
         throw error;
       }
 
@@ -66,8 +70,8 @@ export class LanguageProcessingService implements LanguageProcessor {
 }
 
 type LanguageProcessingConfiguration = {
-  provider: "mock";
-  apiKey?: string;
+  provider: "mock" | "mymemory";
+  fetchImplementation?: typeof fetch;
   timeoutMs?: number;
 };
 
@@ -78,6 +82,11 @@ export function createLanguageProcessingService(
     case "mock":
       return new LanguageProcessingService(
         new MockLanguageProcessingProvider(),
+        configuration.timeoutMs,
+      );
+    case "mymemory":
+      return new LanguageProcessingService(
+        new MyMemoryTranslationProvider(configuration.fetchImplementation),
         configuration.timeoutMs,
       );
   }

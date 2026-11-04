@@ -7,7 +7,6 @@ import { createLanguageProcessingService } from "./language-processing/language-
 const environment = readEnvironment(process.env);
 const languageProcessor = createLanguageProcessingService({
   provider: environment.LANGUAGE_PROCESSING_PROVIDER,
-  apiKey: environment.LANGUAGE_PROCESSING_API_KEY,
   timeoutMs: environment.LANGUAGE_PROCESSING_TIMEOUT_MS,
 });
 const app = createApp({

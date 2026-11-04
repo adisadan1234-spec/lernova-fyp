@@ -122,8 +122,9 @@ export function HomePage() {
             </h2>
           </div>
           <p className="m-0 max-w-md text-sm leading-6 text-ink-600">
-            This development stage connects the form to a clearly labelled API
-            fixture. It does not translate or interpret the message yet.
+            Live Urdu translation sends the message to the free MyMemory service.
+            Lernova does not store it, but you should remove unnecessary personal
+            information before submitting.
           </p>
         </div>
 
@@ -172,7 +173,7 @@ function getFormStatus(status: AnalysisWorkflowState["status"]) {
     case "loading":
       return "Request in progress";
     case "success":
-      return "Fixture returned";
+      return "Translation returned";
     case "error":
       return "Ready to retry";
     default:
