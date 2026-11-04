@@ -1,5 +1,7 @@
 import cors from "cors";
-import express from "express";
+import express, { type ErrorRequestHandler } from "express";
+
+import { analysisRouter } from "./analysis/analysis.router.js";
 
 interface AppOptions {
   clientOrigin?: string;
@@ -26,6 +28,8 @@ export function createApp(options: AppOptions = {}) {
     });
   });
 
+  app.use("/api/analyses", analysisRouter);
+
   app.use((_request, response) => {
     response.status(404).json({
       error: {
@@ -35,5 +39,42 @@ export function createApp(options: AppOptions = {}) {
     });
   });
 
+  const errorHandler: ErrorRequestHandler = (error, _request, response, next) => {
+    void next;
+
+    if (isHttpError(error, 400)) {
+      response.status(400).json({
+        error: {
+          code: "INVALID_JSON",
+          message: "The request body must contain valid JSON.",
+        },
+      });
+      return;
+    }
+
+    if (isHttpError(error, 413)) {
+      response.status(413).json({
+        error: {
+          code: "PAYLOAD_TOO_LARGE",
+          message: "The request body is too large.",
+        },
+      });
+      return;
+    }
+
+    response.status(500).json({
+      error: {
+        code: "INTERNAL_ERROR",
+        message: "The request could not be completed. Please try again.",
+      },
+    });
+  };
+
+  app.use(errorHandler);
+
   return app;
+}
+
+function isHttpError(error: unknown, status: number): error is Error & { status: number } {
+  return error instanceof Error && "status" in error && error.status === status;
 }
