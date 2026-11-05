@@ -122,8 +122,8 @@ export function HomePage() {
             </h2>
           </div>
           <p className="m-0 max-w-md text-sm leading-6 text-ink-600">
-            Live Urdu translation sends the message to the free MyMemory service.
-            Lernova does not store it, but you should remove unnecessary personal
+            Live Urdu output sends the message and its locally simplified
+            restatement to the free MyMemory service. Remove unnecessary personal
             information before submitting.
           </p>
         </div>
@@ -173,7 +173,7 @@ function getFormStatus(status: AnalysisWorkflowState["status"]) {
     case "loading":
       return "Request in progress";
     case "success":
-      return "Translation returned";
+      return "Explanation returned";
     case "error":
       return "Ready to retry";
     default:

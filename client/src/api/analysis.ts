@@ -5,6 +5,12 @@ type AnalysisContent = {
   text: string;
 };
 
+type PlainLanguageMeaning = {
+  status: "fixture" | "generated";
+  directMeaning: string;
+  interpretation: string | null;
+};
+
 type AcademicTerm = {
   term: string;
   generalMeaning: string;
@@ -49,7 +55,7 @@ export type AnalysisResponse = {
     originalText: string;
     targetLanguage: SupportedLanguageCode;
     translation: AnalysisContent;
-    plainLanguageMeaning: AnalysisContent;
+    plainLanguageMeaning: PlainLanguageMeaning;
     academicTerms: AcademicTerm[];
     academicImportance: AcademicImportance[];
     actions: AnalysisAction[];
@@ -145,7 +151,7 @@ function isAnalysisResponse(value: unknown): value is AnalysisResponse {
     typeof data.originalText === "string" &&
     (data.targetLanguage === "en" || data.targetLanguage === "ur") &&
     isAnalysisContent(data.translation) &&
-    isAnalysisContent(data.plainLanguageMeaning) &&
+    isPlainLanguageMeaning(data.plainLanguageMeaning) &&
     Array.isArray(data.academicTerms) &&
     Array.isArray(data.academicImportance) &&
     Array.isArray(data.actions) &&
@@ -163,6 +169,18 @@ function isAnalysisContent(value: unknown): value is AnalysisContent {
     isRecord(value) &&
     (value.status === "fixture" || value.status === "generated") &&
     typeof value.text === "string"
+  );
+}
+
+function isPlainLanguageMeaning(
+  value: unknown,
+): value is PlainLanguageMeaning {
+  return (
+    isRecord(value) &&
+    (value.status === "fixture" || value.status === "generated") &&
+    typeof value.directMeaning === "string" &&
+    (value.interpretation === null ||
+      typeof value.interpretation === "string")
   );
 }
 

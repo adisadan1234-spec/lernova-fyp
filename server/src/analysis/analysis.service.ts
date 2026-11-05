@@ -13,8 +13,9 @@ export async function createAnalysis(
     sourceText: request.message,
     targetLanguage: request.targetLanguage,
   });
-  const hasGeneratedTranslation =
-    languageProcessingOutput.translation.status === "generated";
+  const hasGeneratedOutput =
+    languageProcessingOutput.translation.status === "generated" &&
+    languageProcessingOutput.plainLanguageMeaning.status === "generated";
 
   return analysisResponseSchema.parse({
     data: {
@@ -30,7 +31,7 @@ export async function createAnalysis(
       uncertainties: [
         {
           description: languageProcessingOutput.notice,
-          clarification: hasGeneratedTranslation
+          clarification: hasGeneratedOutput
             ? "Use the original message as the source of truth and confirm important wording, dates, or module-specific requirements with the relevant university staff member."
             : "Do not use this fixture to make an academic decision. Check the original message or ask the relevant university staff member.",
           sourceText: null,
@@ -38,7 +39,7 @@ export async function createAnalysis(
       ],
     },
     meta: {
-      mode: hasGeneratedTranslation ? "live" : "mock",
+      mode: hasGeneratedOutput ? "live" : "mock",
       notice: languageProcessingOutput.notice,
     },
   });

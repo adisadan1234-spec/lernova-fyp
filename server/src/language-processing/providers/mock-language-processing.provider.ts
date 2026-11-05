@@ -27,7 +27,9 @@ export class MockLanguageProcessingProvider
       },
       plainLanguageMeaning: {
         status: "fixture",
-        text: "A contextual plain-language explanation will be added in a later development task.",
+        directMeaning:
+          "A contextual plain-language explanation is unavailable in mock mode.",
+        interpretation: null,
       },
       notice: FIXTURE_NOTICE,
     });

@@ -27,7 +27,8 @@ const validProviderOutput = {
   },
   plainLanguageMeaning: {
     status: "fixture",
-    text: "Fixture meaning",
+    directMeaning: "Fixture meaning",
+    interpretation: null,
   },
   notice: "Development fixture only.",
 };
@@ -56,6 +57,11 @@ describe("LanguageProcessingService", () => {
         status: "generated",
         text: "  Attend the seminar tomorrow.\n",
       },
+      plainLanguageMeaning: {
+        status: "generated",
+        directMeaning: "  You need to attend the seminar tomorrow.\n",
+        interpretation: null,
+      },
     };
     const service = new LanguageProcessingService(
       createProvider(vi.fn().mockResolvedValue(outputWithWhitespace)),
@@ -65,6 +71,9 @@ describe("LanguageProcessingService", () => {
     await expect(service.process(request)).resolves.toMatchObject({
       translation: {
         text: "  Attend the seminar tomorrow.\n",
+      },
+      plainLanguageMeaning: {
+        directMeaning: "  You need to attend the seminar tomorrow.\n",
       },
     });
   });

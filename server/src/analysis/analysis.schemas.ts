@@ -24,6 +24,12 @@ const analysisContentSchema = z.strictObject({
   text: z.string().min(1),
 });
 
+const plainLanguageMeaningSchema = z.strictObject({
+  status: z.enum(["fixture", "generated"]),
+  directMeaning: z.string().min(1),
+  interpretation: z.string().min(1).nullable(),
+});
+
 const academicTermSchema = z.strictObject({
   term: z.string().min(1),
   generalMeaning: z.string().min(1),
@@ -68,7 +74,7 @@ export const analysisResponseSchema = z.strictObject({
     originalText: z.string().min(1).max(MAX_MESSAGE_LENGTH),
     targetLanguage: supportedLanguageSchema,
     translation: analysisContentSchema,
-    plainLanguageMeaning: analysisContentSchema,
+    plainLanguageMeaning: plainLanguageMeaningSchema,
     academicTerms: z.array(academicTermSchema),
     academicImportance: z.array(academicImportanceSchema),
     actions: z.array(actionSchema),

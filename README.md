@@ -16,10 +16,12 @@ The project distinguishes measured comprehension, self-reported confidence, and 
 
 ## Current status
 
-Tasks 1–9 establish the application shell, message workflow, language preferences,
-validated analysis API, and replaceable language-processing service. Task 10 adds
-no-cost English-to-Urdu translation while leaving later contextual-analysis
-sections clearly labelled as development fixtures.
+Tasks 1–10 establish the application shell, message workflow, language
+preferences, validated analysis API, replaceable language-processing service,
+and no-cost English-to-Urdu translation. Task 11 adds a conservative
+plain-language restatement that separates directly supported meaning from any
+additional interpretation. Later contextual-analysis sections remain clearly
+labelled as development fixtures.
 
 ## Technology foundation
 
@@ -73,13 +75,16 @@ Run all foundation checks with `npm.cmd run check`.
 Copy `.env.example` to `.env` and change local database credentials when needed.
 `LANGUAGE_PROCESSING_PROVIDER="mymemory"` enables the free public translation
 API without an account or key; use `"mock"` for offline development. Anonymous
-MyMemory use is limited to 5,000 source characters per day. Never commit `.env`
-or API keys.
+MyMemory use is limited to 5,000 source characters per day. Urdu requests send
+both the original message and its locally simplified restatement for translation,
+so one analysis can consume more than the submitted message length. Never commit
+`.env` or API keys.
 
 ## Privacy note
 
 University communications may contain personal or sensitive information. Lernova
 does not persist submitted messages in the current workflow. When MyMemory is
-configured, the API sends message text to that external translation service, so
-users should remove unnecessary personal information before submitting. Broader
-privacy and retention controls remain scheduled for their roadmap task.
+configured, the API sends the original message and a locally simplified
+restatement to that external translation service, so users should remove
+unnecessary personal information before submitting. Broader privacy and retention
+controls remain scheduled for their roadmap task.

@@ -23,7 +23,11 @@ describe("MyMemoryTranslationProvider", () => {
         status: "generated",
         text: sourceText,
       },
-      plainLanguageMeaning: { status: "fixture" },
+      plainLanguageMeaning: {
+        status: "generated",
+        directMeaning: "  You need to attend the seminar tomorrow.\n",
+        interpretation: null,
+      },
     });
     expect(fetchMock).not.toHaveBeenCalled();
   });
@@ -56,15 +60,24 @@ describe("MyMemoryTranslationProvider", () => {
         status: "generated",
         text: "اپنے اگلے پروجیکٹ ہڈل سے پہلے اپنی ابتدائی تشخیص جمع کروائیں۔",
       },
-      plainLanguageMeaning: { status: "fixture" },
+      plainLanguageMeaning: {
+        status: "generated",
+        interpretation: null,
+      },
     });
-    expect(fetchMock).toHaveBeenCalledOnce();
+    expect(fetchMock).toHaveBeenCalledTimes(2);
 
     const requestUrl = fetchMock.mock.calls[0]?.[0];
     expect(requestUrl).toBeInstanceOf(URL);
     expect((requestUrl as URL).searchParams.get("langpair")).toBe("en|ur");
     expect((requestUrl as URL).searchParams.get("mt")).toBe("1");
     expect((requestUrl as URL).searchParams.has("api_key")).toBe(false);
+
+    const meaningRequestUrl = fetchMock.mock.calls[1]?.[0];
+    expect(meaningRequestUrl).toBeInstanceOf(URL);
+    expect((meaningRequestUrl as URL).searchParams.get("q")).toBe(
+      "You need to submit your formative assessment before your next Project Huddle.",
+    );
   });
 
   it("splits long input below the provider byte limit and preserves line breaks", async () => {
@@ -118,15 +131,17 @@ describe("MyMemoryTranslationProvider", () => {
       context,
     );
 
-    expect(fetchMock.mock.calls[0]?.[1]).toMatchObject({
-      signal: context.signal,
+    expect(fetchMock).toHaveBeenCalledTimes(2);
+    fetchMock.mock.calls.forEach((call) => {
+      expect(call[1]).toMatchObject({ signal: context.signal });
     });
   });
 });
 
 function jsonResponse(body: unknown, status = 200) {
-  return new Response(JSON.stringify(body), {
-    headers: { "Content-Type": "application/json" },
+  return {
+    ok: status >= 200 && status < 300,
     status,
-  });
+    json: vi.fn().mockResolvedValue(body),
+  } as unknown as Response;
 }

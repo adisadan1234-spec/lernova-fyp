@@ -33,10 +33,10 @@ export function AnalysisResults({ state }: AnalysisResultsProps) {
             className="mx-auto block size-10 animate-spin rounded-full border-4 border-mint-100 border-t-mint-600"
           />
           <h3 className="mt-5 text-lg font-bold tracking-[-0.025em] text-ink-950">
-            Translating your message
+            Explaining your message
           </h3>
           <p className="mt-2 text-sm leading-6 text-ink-600">
-            Lernova is waiting for the configured translation service.
+            Lernova is preparing the translation and plain-language meaning.
           </p>
         </div>
       </div>
@@ -86,8 +86,10 @@ export function AnalysisResults({ state }: AnalysisResultsProps) {
 function AnalysisOutput({ response }: { response: AnalysisResponse }) {
   const { data, meta } = response;
   const selectedLanguage = getSupportedLanguage(data.targetLanguage);
-  const translationReady =
-    meta.mode === "live" && data.translation.status === "generated";
+  const explanationReady =
+    meta.mode === "live" &&
+    data.translation.status === "generated" &&
+    data.plainLanguageMeaning.status === "generated";
   const structuredCounts = [
     ["Academic terms", data.academicTerms.length],
     ["Activity explanations", data.academicImportance.length],
@@ -103,7 +105,7 @@ function AnalysisOutput({ response }: { response: AnalysisResponse }) {
         aria-label="Analysis result status"
         aria-live="polite"
         className={`rounded-2xl border p-4 ${
-          translationReady
+          explanationReady
             ? "border-mint-500/30 bg-mint-50"
             : "border-coral-500/30 bg-coral-100/70"
         }`}
@@ -111,14 +113,16 @@ function AnalysisOutput({ response }: { response: AnalysisResponse }) {
         <div className="flex flex-wrap items-center gap-2">
           <span
             className={`rounded-full px-2.5 py-1 text-[0.68rem] font-bold uppercase tracking-[0.12em] text-white ${
-              translationReady ? "bg-mint-700" : "bg-coral-500"
+              explanationReady ? "bg-mint-700" : "bg-coral-500"
             }`}
           >
-            {translationReady ? "Translation ready" : "Development fixture"}
+            {explanationReady
+              ? "Translation and meaning ready"
+              : "Development fixture"}
           </span>
           <span className="text-xs font-bold text-ink-800">
-            {translationReady
-              ? "Contextual analysis remains in development"
+            {explanationReady
+              ? "Other contextual analysis remains in development"
               : "No real analysis performed"}
           </span>
         </div>
@@ -148,12 +152,10 @@ function AnalysisOutput({ response }: { response: AnalysisResponse }) {
             lang={selectedLanguage.code}
             direction={selectedLanguage.direction}
           />
-          <ResultContent
-            title="Clear meaning"
-            text={data.plainLanguageMeaning.text}
-            status={data.plainLanguageMeaning.status}
-            lang="en"
-            direction="ltr"
+          <PlainLanguageMeaningContent
+            meaning={data.plainLanguageMeaning}
+            lang={selectedLanguage.code}
+            direction={selectedLanguage.direction}
           />
         </div>
 
@@ -195,6 +197,66 @@ function AnalysisOutput({ response }: { response: AnalysisResponse }) {
         </section>
       </div>
     </article>
+  );
+}
+
+function PlainLanguageMeaningContent({
+  meaning,
+  lang,
+  direction,
+}: {
+  meaning: AnalysisResponse["data"]["plainLanguageMeaning"];
+  lang: string;
+  direction: "ltr" | "rtl";
+}) {
+  return (
+    <section
+      className={`rounded-2xl border p-4 ${
+        meaning.status === "generated"
+          ? "border-mint-500/30 bg-white"
+          : "border-dashed border-ink-950/20 bg-paper-100/80"
+      }`}
+    >
+      <div className="flex items-center justify-between gap-3">
+        <h3 className="m-0 text-sm font-bold text-ink-950">Clear meaning</h3>
+        <span className="text-[0.68rem] font-bold uppercase tracking-[0.12em] text-coral-500">
+          {meaning.status}
+        </span>
+      </div>
+      <div className="mt-3 grid gap-3">
+        <div>
+          <p className="m-0 text-[0.68rem] font-bold uppercase tracking-[0.12em] text-mint-700">
+            Direct meaning
+          </p>
+          <p
+            lang={lang}
+            dir={direction}
+            className="mt-1 whitespace-pre-wrap text-sm leading-6 text-ink-800"
+          >
+            {meaning.directMeaning}
+          </p>
+        </div>
+        <div className="rounded-xl bg-paper-100 px-3 py-2.5">
+          <p className="m-0 text-[0.68rem] font-bold uppercase tracking-[0.12em] text-ink-600">
+            Additional interpretation
+          </p>
+          {meaning.interpretation ? (
+            <p
+              lang={lang}
+              dir={direction}
+              className="mt-1 whitespace-pre-wrap text-xs leading-5 text-ink-800"
+            >
+              {meaning.interpretation}
+            </p>
+          ) : (
+            <p className="mt-1 text-xs leading-5 text-ink-600">
+              None added. This restatement only uses information directly supported
+              by the message.
+            </p>
+          )}
+        </div>
+      </div>
+    </section>
   );
 }
 
