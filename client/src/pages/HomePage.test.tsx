@@ -81,7 +81,7 @@ describe("initial analysis workflow", () => {
       .closest("section");
     expect(originalMessageSection).not.toBeNull();
     expect(within(originalMessageSection as HTMLElement).getByText(message)).toBeInTheDocument();
-    expect(screen.getByText("Output preference: Urdu")).toBeInTheDocument();
+    expect(screen.getByText("Output language: Urdu")).toBeInTheDocument();
     const translationSection = screen
       .getByRole("heading", { name: "Translation" })
       .closest("section");
@@ -89,10 +89,12 @@ describe("initial analysis workflow", () => {
     expect(within(translationSection as HTMLElement).getByText(
       "اپنے اگلے پروجیکٹ ہڈل سے پہلے اپنی ابتدائی تشخیص جمع کروائیں۔",
     )).toHaveAttribute("dir", "rtl");
-    expect(screen.getByText("Structured findings")).toBeInTheDocument();
+    expect(
+      screen.getByRole("heading", { name: "Compare each version" }),
+    ).toBeInTheDocument();
     expect(screen.getByText("What to confirm")).toBeInTheDocument();
     const meaningSection = screen
-      .getByRole("heading", { name: "Clear meaning" })
+      .getByRole("heading", { name: "Plain-language explanation" })
       .closest("section");
     expect(meaningSection).not.toBeNull();
     expect(
@@ -102,7 +104,7 @@ describe("initial analysis workflow", () => {
     ).toHaveAttribute("dir", "rtl");
     expect(
       within(meaningSection as HTMLElement).getByText(
-        "None added. This restatement only uses information directly supported by the message.",
+        "None added. This explanation only uses information directly supported by the message.",
       ),
     ).toBeInTheDocument();
     expect(screen.getByText("Explanation returned")).toBeInTheDocument();

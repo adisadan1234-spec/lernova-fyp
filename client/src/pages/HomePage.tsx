@@ -128,7 +128,7 @@ export function HomePage() {
           </p>
         </div>
 
-        <div className="grid gap-6 lg:grid-cols-[minmax(0,0.92fr)_minmax(0,1.08fr)]">
+        <div className="grid gap-6 lg:grid-cols-[minmax(20rem,0.8fr)_minmax(0,1.2fr)]">
           <Panel className="p-5 sm:p-7">
             <div className="flex items-center justify-between gap-4">
               <div>

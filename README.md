@@ -16,12 +16,12 @@ The project distinguishes measured comprehension, self-reported confidence, and 
 
 ## Current status
 
-Tasks 1–10 establish the application shell, message workflow, language
-preferences, validated analysis API, replaceable language-processing service,
-and no-cost English-to-Urdu translation. Task 11 adds a conservative
-plain-language restatement that separates directly supported meaning from any
-additional interpretation. Later contextual-analysis sections remain clearly
-labelled as development fixtures.
+Tasks 1–11 establish the application shell, message workflow, language
+preferences, validated analysis API, no-cost English-to-Urdu translation, and a
+conservative plain-language restatement. Task 12 presents the source,
+translation, and explanation in a responsive comparison with accessible copy
+controls. Later contextual-analysis sections remain clearly labelled as
+development fixtures.
 
 ## Technology foundation
 
